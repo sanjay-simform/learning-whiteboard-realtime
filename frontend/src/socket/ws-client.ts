@@ -1,10 +1,6 @@
 // websocket/ws-client.ts
 
-import {
-  getEventCodeForEvent,
-  getEventFromEventCode,
-  type ServerEvents,
-} from "./ws-events.type"
+import { getEventFromEventCode, type ServerEvents } from "./ws-events.type"
 import type { ClientEvents } from "./ws-events.type"
 
 type EventHandler = (payload: unknown) => void
@@ -69,7 +65,6 @@ class WSClient {
     ws.binaryType = "arraybuffer"
 
     ws.onmessage = (event) => {
-      console.log("Received message from server:", typeof event.data)
       if (typeof event.data === "string") {
         try {
           const parsed = JSON.parse(event.data)
@@ -86,22 +81,21 @@ class WSClient {
         const eventCode = view.getUint8(offset)
         offset += 1
 
-        const x = view.getUint16(offset)
-        offset += 2
-        const y = view.getUint16(offset)
-        offset += 2
+        const x = view.getUint32(offset)
+        offset += 4
+        const y = view.getUint32(offset)
+        offset += 4
         const userId = view.getUint16(offset)
         offset += 2
         const boardId = view.getUint16(offset)
         offset += 2
 
         const eventName = getEventFromEventCode(eventCode)
-        const actualX = (x / 65535) * window.innerWidth
-        const actualY = (y / 65535) * window.innerHeight
+
         this.emitLocal(eventName, {
           boardId,
-          x: actualX,
-          y: actualY,
+          x,
+          y,
           userId,
         } as ServerEvents[typeof eventName])
       }

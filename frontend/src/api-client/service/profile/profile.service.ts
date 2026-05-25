@@ -1,30 +1,15 @@
-import type { AxiosError } from "axios"
-import { apiClient, type AxiosApiResponse } from "../../axios"
+import { apiClient } from "../../axios"
 import type { ProfileResponse } from "./profile.service.dto"
 import { useQuery } from "@tanstack/react-query"
+import { handleApiRequest, type AxiosApiResponse } from "../../util"
 
 export async function getProfileApi(): Promise<
   AxiosApiResponse<ProfileResponse>
 > {
-  try {
-    const response = await apiClient.get<ProfileResponse>("/profile")
-    return {
-      data: response.data,
-      error: null,
-    }
-  } catch (err) {
-    const error = err as AxiosError
-    return {
-      data: null,
-      error: {
-        status: error.response?.status || 500,
-        message:
-          error.response?.data?.message || error.message || "Signup failed",
-        code: error.code,
-        details: error.response?.data,
-      },
-    }
-  }
+  return await handleApiRequest<ProfileResponse>(
+    apiClient.get<ProfileResponse>("/profile"),
+    "Failed to fetch profile"
+  )
 }
 
 export function useGetProfile() {

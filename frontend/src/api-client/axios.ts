@@ -1,5 +1,4 @@
 import axios, { AxiosError } from "axios"
-import { useAuth } from "../context/Auth.context"
 
 export const API_BASE_URL =
   import.meta.env.VITE_API_URL || "http://localhost:3000/api"
@@ -44,22 +43,3 @@ apiClient.interceptors.response.use(
 )
 
 export default apiClient
-
-export interface AxiosErrorResponse {
-  status: number
-  message: string
-  code?: string
-  details?: unknown
-}
-
-export type AxiosApiResponse<T> =
-  | {
-      data: T
-      error: null
-    }
-  | { data: null; error: AxiosErrorResponse }
-export interface ApiResponse<T> {
-  data: T
-  message?: string
-  error?: string
-}

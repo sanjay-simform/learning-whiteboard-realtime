@@ -19,6 +19,20 @@ export interface ServerEvents {
   "board.leave": {
     boardId: number
   }
+
+  "board.shape.draw": {
+    boardId: number
+    userId: number
+    shape: {
+      type: "rectangle" | "circle" | "line" | "text"
+      x: number
+      y: number
+      width?: number
+      height?: number
+      radius?: number
+      text?: string
+    }
+  }
 }
 
 export interface ClientEvents {
@@ -33,6 +47,20 @@ export interface ClientEvents {
     boardId: number
     x: number
     y: number
+  }
+
+  "board.shape.draw": {
+    boardId: number
+    userId: number
+    shape: {
+      type: "rectangle" | "circle" | "line" | "text"
+      x: number
+      y: number
+      width?: number
+      height?: number
+      radius?: number
+      text?: string
+    }
   }
 }
 

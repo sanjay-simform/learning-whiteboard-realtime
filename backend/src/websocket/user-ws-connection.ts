@@ -2,20 +2,20 @@ import WebSocket from "ws";
 import { getEventCodeForEvent, WSEvents } from "./events";
 
 export class UserWsConnection {
-  private readonly socketsByUser = new Map<string, Set<WebSocket>>();
+  private readonly socketsByUser = new Map<number, Set<WebSocket>>();
 
-  addConnection(userId: string, socket: WebSocket) {
+  addConnection(userId: number, socket: WebSocket) {
     if (!this.socketsByUser.has(userId)) {
       this.socketsByUser.set(userId, new Set());
     }
     this.socketsByUser.get(userId)!.add(socket);
   }
 
-  getConnections(userId: string): Set<WebSocket> | undefined {
+  getConnections(userId: number): Set<WebSocket> | undefined {
     return this.socketsByUser.get(userId);
   }
 
-  removeConnection(userId: string, socket: WebSocket) {
+  removeConnection(userId: number, socket: WebSocket) {
     const userSockets = this.socketsByUser.get(userId);
     if (userSockets) {
       userSockets.delete(socket);
@@ -25,7 +25,7 @@ export class UserWsConnection {
     }
   }
 
-  emitJson(userId: string, event: WSEvents, data: any) {
+  emitJson(userId: number, event: WSEvents, data: any) {
     const userSockets = this.socketsByUser.get(userId);
     if (userSockets) {
       const message = JSON.stringify({ event, data });
@@ -37,7 +37,7 @@ export class UserWsConnection {
     }
   }
 
-  emitBinaryData(userId: string, event: WSEvents, data: Record<string, any>) {
+  emitBinaryData(userId: number, event: WSEvents, data: Record<string, any>) {
     // first byte will be a simple event code, followed by JSON string of the data
     const userSockets = this.socketsByUser.get(userId);
     if (userSockets) {

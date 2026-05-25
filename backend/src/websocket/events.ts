@@ -4,7 +4,8 @@ export type WSEvents =
   | "heartbeat"
   | "cursor.update"
   | "board.join"
-  | "board.leave";
+  | "board.leave"
+  | "board.shape.draw";
 
 export interface CursorUpdateEventData {
   x: number;
@@ -25,6 +26,8 @@ export const getEventCodeForEvent = (event: WSEvents): number => {
       return 5;
     case "board.leave":
       return 6;
+    case "board.shape.draw":
+      return 7;
     default:
       throw new Error(`Unknown event: ${event satisfies never}`);
   }

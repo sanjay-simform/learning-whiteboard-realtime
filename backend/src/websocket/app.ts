@@ -29,11 +29,11 @@ export function createWebSocketServer(server: Server) {
       ws.close(1008, "Unauthorized");
       return;
     }
-
-    userWsConnection.addConnection(user.userId, ws);
-    userWsConnection.emitJson(user.userId, "connected", {});
+    const userId = +user.userId; // ensure userId is a number
+    userWsConnection.addConnection(userId, ws);
+    userWsConnection.emitJson(userId, "connected", {});
     ws.isAlive = true;
-    ws.userId = user.userId;
+    ws.userId = userId;
     ws.on("pong", () => {
       ws.isAlive = true;
     });
@@ -59,7 +59,7 @@ export function createWebSocketServer(server: Server) {
     });
 
     ws.on("close", () => {
-      userWsConnection.removeConnection(user.userId, ws);
+      userWsConnection.removeConnection(userId, ws);
     });
   });
 

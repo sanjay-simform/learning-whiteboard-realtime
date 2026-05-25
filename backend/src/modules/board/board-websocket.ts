@@ -3,17 +3,17 @@ import { getEventCodeForEvent, WSEvents } from "websocket/events";
 import { userWsConnection } from "websocket/user-ws-connection";
 
 export class BoardSocket {
-  boards: Map<number, Set<string>> = new Map();
+  boards: Map<number, Set<number>> = new Map();
   cursorBuffers = new RingBufferPool(14, 4096);
 
-  subscribe(userId: string, boardId: number) {
+  subscribe(userId: number, boardId: number) {
     if (!this.boards.has(boardId)) {
       this.boards.set(boardId, new Set());
     }
     this.boards.get(boardId)!.add(userId);
   }
 
-  unsubscribe(userId: string, boardId: number) {
+  unsubscribe(userId: number, boardId: number) {
     const boardUsers = this.boards.get(boardId);
     if (boardUsers) {
       boardUsers.delete(userId);
@@ -23,12 +23,12 @@ export class BoardSocket {
     }
   }
 
-  getSubscribers(boardId: number): Set<string> {
+  getSubscribers(boardId: number): Set<number> {
     return this.boards.get(boardId) || new Set();
   }
 
   boardJoined(
-    currentUserId: string,
+    currentUserId: number,
     boardId: number,
     metadata: Record<string, any>,
   ) {
@@ -41,7 +41,7 @@ export class BoardSocket {
   }
 
   broadCastToBoardMembers(
-    currentUserId: string,
+    currentUserId: number,
     boardId: number,
     event: WSEvents,
     data: Record<string, any>,
@@ -56,7 +56,7 @@ export class BoardSocket {
   }
 
   broadcastCursorUpdate(
-    currentUserId: string,
+    currentUserId: number,
     boardId: number,
     cursorData: { x: number; y: number; userId: number },
   ) {
@@ -96,7 +96,7 @@ export class BoardSocket {
   }
 
   broadcastCursorUpdateBinary(
-    currentUserId: string,
+    currentUserId: number,
     boardId: number,
     data: Buffer,
   ) {
@@ -120,7 +120,7 @@ export class BoardSocket {
 
   handleSocketEvents(
     event: WSEvents,
-    userId: string,
+    userId: number,
     data: Record<string, any>,
   ) {
     switch (event) {
@@ -140,18 +140,26 @@ export class BoardSocket {
         });
         break;
 
+      case "board.shape.draw":
+        this.broadCastToBoardMembers(
+          userId,
+          +data.boardId,
+          "board.shape.draw",
+          data,
+        );
+
       default:
         break;
     }
   }
 
-  handleBinarySocketEvent(data: Buffer, userId: string) {
+  handleBinarySocketEvent(data: Buffer, userId: number) {
     const view = new DataView(data.buffer, data.byteOffset, data.byteLength);
     const eventCode = view.getUint8(0);
 
     switch (eventCode) {
       case getEventCodeForEvent("cursor.update"):
-        const boardId = view.getUint16(7);
+        const boardId = view.getUint16(11);
         this.broadcastCursorUpdateBinary(userId, boardId, data);
         break;
 

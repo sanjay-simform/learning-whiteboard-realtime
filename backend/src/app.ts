@@ -1,6 +1,7 @@
 import cors from "cors";
 import express, { Request, Response, NextFunction } from "express";
 import { authenticateToken, authRoutes } from "modules/auth";
+import boardRouter from "modules/board/board.route";
 import profileRouter from "modules/profile/profile.route";
 import { userRoutes } from "modules/users";
 
@@ -30,6 +31,7 @@ app.get("/health", (_req: Request, res: Response) => {
 app.use("/auth", authRoutes);
 app.use("/users", userRoutes);
 app.use("/profile", authenticateToken, profileRouter);
+app.use("/board", authenticateToken, boardRouter);
 
 // 404 handler
 app.use((_req: Request, res: Response) => {

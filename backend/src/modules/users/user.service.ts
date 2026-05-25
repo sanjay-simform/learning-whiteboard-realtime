@@ -1,4 +1,4 @@
-import { Repository } from "typeorm";
+import { In, Repository } from "typeorm";
 import { User } from "../../db/schema/user.entity";
 import { AppDataSource } from "db/data-source";
 
@@ -34,5 +34,9 @@ export class UserService {
   async deleteUser(id: string): Promise<boolean> {
     const result = await this.userRepository.delete(id);
     return result.affected ? result.affected > 0 : false;
+  }
+
+  async getUsersByIds(ids: number[]): Promise<User[]> {
+    return this.userRepository.find({ where: { id: In(ids) } });
   }
 }

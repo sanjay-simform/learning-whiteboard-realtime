@@ -9,7 +9,7 @@ export class ProfileController {
   }
   async getProfile(req: Request, res: Response) {
     try {
-      const userId = req.user.id;
+      const userId = req.user.userId;
       const profile = await this.userService.getUserById(userId);
       const response = {
         id: profile?.id,
