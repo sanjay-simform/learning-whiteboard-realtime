@@ -154,3 +154,101 @@ export function drawShapeFromEvent(
   console.warn("Invalid shape data:", shapeData)
   return null
 }
+
+export const CursorColors = [
+  "#3b82f6",
+  "#ef4444",
+  "#10b981",
+  "#f59e0b",
+  "#8b5cf6",
+  "#ec4899",
+  "#14b8a6",
+  "#f97316",
+  "#6366f1",
+  "#db2777",
+  "#06b6d4",
+  "#e879f9",
+]
+
+export type BoardShapePayload = {
+  type: "rectangle" | "circle" | "line" | "text"
+  x: number
+  y: number
+  width?: number
+  height?: number
+  radius?: number
+  text?: string
+}
+const COORD_MAX = 65535
+
+export function getRandomCursorColor() {
+  return CursorColors[Math.floor(Math.random() * CursorColors.length)]
+}
+
+export function normalizeCoordinate(value: number, size: number) {
+  if (size <= 0) return 0
+  return Math.floor((value / size) * COORD_MAX)
+}
+
+export function denormalizeCoordinate(value: number, size: number) {
+  if (size <= 0) return 0
+  return (value / COORD_MAX) * size
+}
+
+export function getLengthReference(rect: DOMRect) {
+  return Math.sqrt(Math.max(rect.width, 1) * Math.max(rect.height, 1))
+}
+
+export function normalizeRadius(value: number, rect: DOMRect) {
+  return normalizeCoordinate(value, getLengthReference(rect))
+}
+
+export function denormalizeRadius(value: number, rect: DOMRect) {
+  return denormalizeCoordinate(value, getLengthReference(rect))
+}
+
+export function normalizeShapeForBroadcast(
+  shape: BoardShapePayload,
+  rect: DOMRect
+) {
+  return {
+    ...shape,
+    x: normalizeCoordinate(shape.x, rect.width),
+    y: normalizeCoordinate(shape.y, rect.height),
+    width:
+      shape.width !== undefined
+        ? normalizeCoordinate(shape.width, rect.width)
+        : undefined,
+    height:
+      shape.height !== undefined
+        ? normalizeCoordinate(shape.height, rect.height)
+        : undefined,
+    radius:
+      shape.radius !== undefined
+        ? normalizeRadius(shape.radius, rect)
+        : undefined,
+  }
+}
+
+export function denormalizeShapeFromBroadcast(
+  shape: BoardShapePayload,
+  rect: DOMRect
+) {
+  return {
+    ...shape,
+    x: denormalizeCoordinate(shape.x, rect.width),
+    y: denormalizeCoordinate(shape.y, rect.height),
+    width:
+      shape.width !== undefined
+        ? denormalizeCoordinate(shape.width, rect.width)
+        : undefined,
+    height:
+      shape.height !== undefined
+        ? denormalizeCoordinate(shape.height, rect.height)
+        : undefined,
+    radius:
+      shape.radius !== undefined
+        ? denormalizeRadius(shape.radius, rect)
+        : undefined,
+  }
+}

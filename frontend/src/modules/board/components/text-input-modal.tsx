@@ -13,17 +13,14 @@ export function TextInputModal({
   y,
   onSubmit,
   onCancel,
-  showTextModal,
 }: TextInputModalProps) {
   const inputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
-    if (!showTextModal) return
-
     requestAnimationFrame(() => {
       inputRef.current?.focus()
     })
-  }, [showTextModal])
+  }, [])
 
   const handleSubmit = () => {
     onSubmit(inputRef.current?.value || "")

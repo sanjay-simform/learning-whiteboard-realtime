@@ -68,12 +68,14 @@ export function useShapeDrawing(
 
       const width = x - state.startX
       const height = y - state.startY
+      const originX = Math.min(state.startX, x)
+      const originY = Math.min(state.startY, y)
 
       if (tool === "rectangle") {
         state.tempShape = drawRectangle(
           stageContainer,
-          state.startX,
-          state.startY,
+          originX,
+          originY,
           Math.abs(width),
           Math.abs(height),
           { ...SHAPE_CONFIG, fillAlpha: 0.1 }
@@ -121,6 +123,8 @@ export function useShapeDrawing(
       // Finalize shape
       const width = x - state.startX
       const height = y - state.startY
+      const originX = Math.min(state.startX, x)
+      const originY = Math.min(state.startY, y)
 
       if (
         tool === "rectangle" &&
@@ -128,16 +132,18 @@ export function useShapeDrawing(
       ) {
         drawRectangle(
           stageContainer,
-          state.startX,
-          state.startY,
+          originX,
+          originY,
           Math.abs(width),
           Math.abs(height),
           SHAPE_CONFIG
         )
         console.log("Drawing rectangle with width:", width, "height:", height)
         return {
-          height,
-          width,
+          height: Math.abs(height),
+          width: Math.abs(width),
+          x: originX,
+          y: originY,
         }
       } else if (tool === "circle") {
         const radius = Math.sqrt(width * width + height * height)
@@ -150,8 +156,8 @@ export function useShapeDrawing(
             SHAPE_CONFIG
           )
           return {
-            height,
-            width,
+            x: state.startX,
+            y: state.startY,
             radius,
           }
         }
@@ -163,6 +169,8 @@ export function useShapeDrawing(
         return {
           height,
           width,
+          x: state.startX,
+          y: state.startY,
         }
       }
     },

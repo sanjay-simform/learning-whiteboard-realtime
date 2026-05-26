@@ -5,21 +5,21 @@ export function generateBoardCursorUpdateEvent({
   userId,
   x,
   y,
-  innerHeight,
-  innerWidth,
+  canvasHeight,
+  canvasWidth,
 }: {
   boardId: number
   userId: number
   x: number
   y: number
-  innerHeight: number
-  innerWidth: number
+  canvasHeight: number
+  canvasWidth: number
 }) {
   const buffer = new ArrayBuffer(13)
 
   const view = new DataView(buffer)
-  const normalizedX = Math.floor((x / innerWidth) * 65535)
-  const normalizedY = Math.floor((y / innerHeight) * 65535)
+  const normalizedX = Math.floor((x / Math.max(canvasWidth, 1)) * 65535)
+  const normalizedY = Math.floor((y / Math.max(canvasHeight, 1)) * 65535)
   // const normalizedX = x
   // const normalizedY = y
   // 1 byte event code

@@ -6,7 +6,13 @@ import { Application, extend, type ApplicationRef } from "@pixi/react"
 import { Sprite, Container, Graphics } from "pixi.js"
 import { useWhiteboardStore, type Tool } from "../../../store/whiteboard.store"
 import { SHAPE_CONFIG, useShapeDrawing } from "../hooks/use-shape-drawing"
-import { drawShapeFromEvent } from "../hooks/shape-drawing.util"
+import {
+  denormalizeCoordinate,
+  denormalizeShapeFromBroadcast,
+  drawShapeFromEvent,
+  normalizeShapeForBroadcast,
+  type BoardShapePayload,
+} from "../hooks/shape-drawing.util"
 import { TextInputModal } from "./text-input-modal"
 import { AppContent } from "./app-content"
 import * as PIXI from "pixi.js"
@@ -46,6 +52,13 @@ export function BoardCanvas({ boardId }: { boardId: number }) {
   const { handleMouseDown, handleMouseMove, handleMouseUp } =
     useShapeDrawing(pixiAppRef)
 
+  useEffect(() => {
+    const stage = pixiAppRef.current?.getApplication()?.stage
+    if (!stage) return
+
+    stage.sortableChildren = true
+  }, [])
+
   const getCursorStyle = useCallback((tool: Tool): string => {
     switch (tool) {
       case "pointer":
@@ -67,11 +80,14 @@ export function BoardCanvas({ boardId }: { boardId: number }) {
 
   const handleCursorUpdate = useCallback(
     (data: { userId: number; x: number; y: number; boardId: number }) => {
+      const rect = appRef.current?.getBoundingClientRect()
+      if (!rect) return
+
       setCursors((prev) => ({
         ...prev,
         [data.userId]: {
-          x: (data.x / 65535) * window.innerWidth - 60,
-          y: (data.y / 65535) * window.innerHeight - 80,
+          x: denormalizeCoordinate(data.x, rect.width),
+          y: denormalizeCoordinate(data.y, rect.height),
           userId: data.userId,
         },
       }))
@@ -80,24 +96,14 @@ export function BoardCanvas({ boardId }: { boardId: number }) {
   )
 
   const handleShapeDraw = useCallback(
-    (data: {
-      userId: number
-      boardId: number
-      shape: {
-        type: "rectangle" | "circle" | "line" | "text"
-        x: number
-        y: number
-        width?: number
-        height?: number
-        radius?: number
-        text?: string
-      }
-    }) => {
+    (data: { userId: number; boardId: number; shape: BoardShapePayload }) => {
+      const rect = appRef.current?.getBoundingClientRect()
       const stageContainer = pixiAppRef.current?.getApplication()?.stage
-      if (!stageContainer) return
+      if (!stageContainer || !rect) return
 
-      // Draw the shape using the utility function
-      drawShapeFromEvent(stageContainer, data.shape, SHAPE_CONFIG)
+      const localShape = denormalizeShapeFromBroadcast(data.shape, rect)
+
+      drawShapeFromEvent(stageContainer, localShape, SHAPE_CONFIG)
     },
     [pixiAppRef]
   )
@@ -127,8 +133,8 @@ export function BoardCanvas({ boardId }: { boardId: number }) {
       const y = event.clientY - rect.top
 
       latestPosRef.current = {
-        x: event.clientX,
-        y: event.clientY,
+        x,
+        y,
         userId: user?.id || 0,
       }
 
@@ -169,15 +175,18 @@ export function BoardCanvas({ boardId }: { boardId: number }) {
 
         if (shapeData) {
           console.log("Shape data to send:", shapeData)
+          const normalizedShape = normalizeShapeForBroadcast(
+            {
+              type: selectedTool,
+              ...shapeData,
+            },
+            rect
+          )
+
           wsClient.send("board.shape.draw", {
             boardId,
             userId: user?.id || 0,
-            shape: {
-              type: selectedTool,
-              x,
-              y,
-              ...shapeData,
-            },
+            shape: normalizedShape,
           })
         }
       }
@@ -193,6 +202,12 @@ export function BoardCanvas({ boardId }: { boardId: number }) {
     const tick = () => {
       const latest = latestPosRef.current
       const prev = lastSentRef.current
+      const rect = appref?.getBoundingClientRect()
+
+      if (!rect) {
+        rafId = requestAnimationFrame(tick)
+        return
+      }
 
       const dx = latest.x - prev.x
       const dy = latest.y - prev.y
@@ -209,14 +224,13 @@ export function BoardCanvas({ boardId }: { boardId: number }) {
         lastSendTimeRef.current = now
         lastSentRef.current = latest
 
-        // send ws event
         const cursorEventPayload = generateBoardCursorUpdateEvent({
           x: latest.x,
           y: latest.y,
           userId: user.id,
           boardId,
-          innerHeight: window.innerHeight,
-          innerWidth: window.innerWidth,
+          canvasHeight: rect.height,
+          canvasWidth: rect.width,
         })
 
         wsClient.sendRaw(cursorEventPayload)
@@ -267,15 +281,20 @@ export function BoardCanvas({ boardId }: { boardId: number }) {
               })
               const appContainer = pixiAppRef.current?.getApplication()?.stage
               appContainer?.addChild(textObj)
-              wsClient.send("board.shape.draw", {
-                boardId,
-                userId: user?.id || 0,
-                shape: {
+              const normalizedShape = normalizeShapeForBroadcast(
+                {
                   type: "text",
                   x: canvasX,
                   y: canvasY,
                   text,
                 },
+                rect
+              )
+
+              wsClient.send("board.shape.draw", {
+                boardId,
+                userId: user?.id || 0,
+                shape: normalizedShape,
               })
             }
             setShowTextModal(false)

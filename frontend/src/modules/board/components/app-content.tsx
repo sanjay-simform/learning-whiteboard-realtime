@@ -12,7 +12,7 @@ interface AppContentProps {
 
 export function AppContent({ cursors }: AppContentProps) {
   return (
-    <>
+    <pixiContainer zIndex={1000}>
       {Object.values(cursors).map((cursor) => (
         <AnimatedCursor
           key={cursor.userId}
@@ -21,6 +21,6 @@ export function AppContent({ cursors }: AppContentProps) {
           name={`User ${cursor.userId}`}
         />
       ))}
-    </>
+    </pixiContainer>
   )
 }

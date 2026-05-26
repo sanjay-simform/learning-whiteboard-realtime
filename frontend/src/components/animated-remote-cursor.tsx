@@ -1,6 +1,7 @@
 import { useTick } from "@pixi/react"
 import { useRef } from "react"
 import { RemoteCursor } from "./remote-cursor"
+import type { Container } from "pixi.js"
 
 type Props = {
   x: number
@@ -9,7 +10,7 @@ type Props = {
 }
 
 export function AnimatedCursor({ x: targetX, y: targetY, name }: Props) {
-  const containerRef = useRef(null)
+  const containerRef = useRef<Container | null>(null)
 
   const current = useRef({
     x: targetX,

@@ -1,6 +1,7 @@
 import { TextStyle, Text, Assets, Sprite } from "pixi.js"
 import { extend } from "@pixi/react"
 import { useEffect, useState } from "react"
+import { getRandomCursorColor } from "../modules/board/hooks/shape-drawing.util"
 
 extend({ TextStyle, Text, Sprite })
 
@@ -17,6 +18,8 @@ const textStyle = new TextStyle({
   fontWeight: "600",
   fontFamily: "Inter, sans-serif",
 })
+
+export const CURSOR_TIP_OFFSET = 4
 
 function createCursorSVG(color: string) {
   return `
@@ -35,8 +38,8 @@ function createCursorSVG(color: string) {
   </svg>
   `
 }
-
-export function RemoteCursor({ x, y, name, color = "#3b82f6" }: CursorProps) {
+const cursorColor = getRandomCursorColor()
+export function RemoteCursor({ x, y, name, color = cursorColor }: CursorProps) {
   const [texture, setTexture] = useState(null)
 
   useEffect(() => {
@@ -57,9 +60,15 @@ export function RemoteCursor({ x, y, name, color = "#3b82f6" }: CursorProps) {
 
   const labelWidth = Math.max(name.length * 7 + 14, 40)
   return (
-    <pixiContainer x={x} y={y}>
+    <pixiContainer x={x + 35} y={y + 35}>
       {/* Cursor */}
-      <pixiSprite texture={texture} width={22} height={22} />
+      <pixiSprite
+        x={-CURSOR_TIP_OFFSET}
+        y={-CURSOR_TIP_OFFSET}
+        texture={texture}
+        width={22}
+        height={22}
+      />
 
       {/* Label Background */}
       <pixiGraphics
@@ -67,7 +76,6 @@ export function RemoteCursor({ x, y, name, color = "#3b82f6" }: CursorProps) {
         y={18}
         draw={(g) => {
           g.clear()
-
           g.roundRect(0, 0, labelWidth, 24, 6)
           g.fill(color)
         }}
