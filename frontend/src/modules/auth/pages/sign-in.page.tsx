@@ -14,6 +14,7 @@ export default function SignInPage() {
   const handleLogin = async (data: LoginFormData) => {
     setError(null)
     const response = await loginMutation.mutateAsync(data)
+    console.log("🚀 ~ handleLogin ~ response:", response)
     if (response.error) {
       setError(response.error.message)
       toast.error(response.error.message, {

@@ -1,13 +1,17 @@
 import { apiClient } from "../../axios"
 import type { BoardActiveMemberResponse } from "./board.service.dto"
 import { useQuery } from "@tanstack/react-query"
-import { handleApiRequest, type AxiosApiResponse } from "../../util"
+import {
+  handleApiRequest,
+  type ApiResponse,
+  type AxiosApiResponse,
+} from "../../util"
 
 export async function getBoardActiveMembers(
   boardId: number
 ): Promise<AxiosApiResponse<BoardActiveMemberResponse>> {
   return await handleApiRequest(
-    apiClient.get<BoardActiveMemberResponse>(
+    apiClient.get<ApiResponse<BoardActiveMemberResponse>>(
       `/board/${boardId}/current-members`
     ),
     "Failed to fetch board active members"

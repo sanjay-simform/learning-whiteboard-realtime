@@ -14,14 +14,17 @@ export function drawRectangle(
   height: number,
   config: ShapeConfig = {}
 ) {
-  const { color = 0x000000, fillAlpha = 0 } = config
+  const { color = 0x111827, lineWidth = 2, fillAlpha = 0.08 } = config
 
   const rectangle = new PIXI.Graphics()
-  rectangle.rect(x, y, width, height)
-  rectangle.fill({
-    color,
-    alpha: fillAlpha,
-  })
+  rectangle.lineStyle(lineWidth, color, 0.95)
+  if (fillAlpha > 0) {
+    rectangle.beginFill(color, fillAlpha)
+  }
+  rectangle.drawRect(x, y, width, height)
+  if (fillAlpha > 0) {
+    rectangle.endFill()
+  }
 
   stage.addChild(rectangle)
   return rectangle
@@ -34,10 +37,10 @@ export function drawCircle(
   radius: number,
   config: ShapeConfig = {}
 ) {
-  const { color = 0x000000, lineWidth = 2, fillAlpha = 0 } = config
+  const { color = 0x111827, lineWidth = 2, fillAlpha = 0.08 } = config
 
   const circle = new PIXI.Graphics()
-  circle.lineStyle(lineWidth, color, 1)
+  circle.lineStyle(lineWidth, color, 0.95)
   if (fillAlpha > 0) {
     circle.beginFill(color, fillAlpha)
   }
@@ -58,10 +61,10 @@ export function drawLine(
   y2: number,
   config: ShapeConfig = {}
 ) {
-  const { color = 0x000000, lineWidth = 2 } = config
+  const { color = 0x111827, lineWidth = 2 } = config
 
   const line = new PIXI.Graphics()
-  line.lineStyle(lineWidth, color, 1)
+  line.lineStyle(lineWidth, color, 0.95)
   line.moveTo(x1, y1)
   line.lineTo(x2, y2)
 
@@ -80,9 +83,9 @@ export function drawText(
     text,
     style: {
       fontSize,
-      // black color for better visibility on white background, can be customized
-      fill: "#000000",
-      fontFamily: "Arial",
+      fill: "#111827",
+      fontFamily: "Inter Variable, Inter, sans-serif",
+      fontWeight: "600",
     },
   })
 
@@ -128,7 +131,7 @@ export function drawShapeFromEvent(
     case "circle":
       if (shapeData.radius !== undefined) {
         return drawCircle(stage, x, y, shapeData.radius, {
-          ...{ color: 0x000000, lineWidth: 2, fillAlpha: 0 },
+          ...{ color: 0x111827, lineWidth: 2, fillAlpha: 0.08 },
           ...config,
         })
       }
@@ -139,7 +142,7 @@ export function drawShapeFromEvent(
       const x2 = shapeData.width !== undefined ? x + shapeData.width : x
       const y2 = shapeData.height !== undefined ? y + shapeData.height : y
       return drawLine(stage, x, y, x2, y2, {
-        ...{ color: 0x000000, lineWidth: 2 },
+        ...{ color: 0x111827, lineWidth: 2 },
         ...config,
       })
     }

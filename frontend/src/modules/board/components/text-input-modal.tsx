@@ -1,4 +1,5 @@
-import { useState, useEffect, useRef } from "react"
+import { useEffect, useRef } from "react"
+import { Check, X } from "lucide-react"
 
 interface TextInputModalProps {
   x: number
@@ -23,7 +24,10 @@ export function TextInputModal({
   }, [])
 
   const handleSubmit = () => {
-    onSubmit(inputRef.current?.value || "")
+    const value = inputRef.current?.value.trim() || ""
+    if (!value) return
+
+    onSubmit(value)
     inputRef.current!.value = ""
   }
 
@@ -36,37 +40,37 @@ export function TextInputModal({
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+    <div className="fixed inset-0 z-50 bg-transparent" onMouseDown={onCancel}>
       <div
-        className="rounded-lg bg-white p-4 shadow-lg"
+        className="board-popover-enter rounded-[8px] border border-black/10 bg-white/94 p-3 shadow-[0_18px_60px_rgba(15,23,42,0.18)] backdrop-blur-xl"
+        onMouseDown={(event) => event.stopPropagation()}
         style={{
           position: "absolute",
-          left: `${x}px`,
-          top: `${y}px`,
+          left: `clamp(1rem, ${x}px, calc(100vw - 18rem))`,
+          top: `clamp(1rem, ${y}px, calc(100vh - 8rem))`,
         }}
       >
         <input
           ref={inputRef}
           type="text"
-          // value={text}
-          // onChange={(e) => (inputRef.current!.value = e.target.value)}
           onKeyDown={handleKeyDown}
-          placeholder="Enter text..."
-          // autoFocus
-          className="w-48 rounded border border-gray-300 px-2 py-1 text-black"
+          placeholder="Type text"
+          className="h-10 w-56 rounded-[8px] border border-input bg-background px-3 text-sm font-medium text-foreground shadow-inner transition outline-none focus:border-primary focus:ring-4 focus:ring-primary/12"
         />
-        <div className="mt-2 flex gap-2">
+        <div className="mt-2 flex justify-end gap-2">
           <button
             onClick={handleSubmit}
-            className="rounded bg-blue-500 px-3 py-1 text-white hover:bg-blue-600"
+            className="flex h-9 w-9 items-center justify-center rounded-[8px] bg-foreground text-background shadow-sm transition hover:-translate-y-0.5 hover:shadow-md active:scale-95"
+            title="Add text"
           >
-            Add
+            <Check className="h-4 w-4" />
           </button>
           <button
             onClick={onCancel}
-            className="rounded bg-gray-300 px-3 py-1 text-gray-700 hover:bg-gray-400"
+            className="flex h-9 w-9 items-center justify-center rounded-[8px] border border-black/5 bg-white text-muted-foreground shadow-sm transition hover:-translate-y-0.5 hover:text-foreground hover:shadow-md active:scale-95"
+            title="Cancel"
           >
-            Cancel
+            <X className="h-4 w-4" />
           </button>
         </div>
       </div>

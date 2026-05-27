@@ -1,5 +1,4 @@
-import type { AxiosError } from "axios"
-import apiClient from "./axios"
+import type { AxiosError, AxiosResponse } from "axios"
 
 export interface AxiosErrorResponse {
   status: number
@@ -21,14 +20,13 @@ export interface ApiResponse<T> {
 }
 
 export async function handleApiRequest<T>(
-  axiosPromise: Promise<ApiResponse<T>>,
+  axiosPromise: Promise<AxiosResponse<ApiResponse<T>>>,
   errMessage: string = "An error occurred"
 ): Promise<AxiosApiResponse<T>> {
   try {
     const response = await axiosPromise
-
     return {
-      data: response.data,
+      data: response.data.data,
       error: null,
     }
   } catch (err) {

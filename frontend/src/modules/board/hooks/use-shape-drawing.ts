@@ -19,9 +19,9 @@ export interface DrawingState {
 }
 
 export const SHAPE_CONFIG = {
-  color: 0x3b82f6,
-  lineWidth: 2,
-  fillAlpha: 1,
+  color: 0x0f766e,
+  lineWidth: 2.5,
+  fillAlpha: 0.12,
 }
 
 export function useShapeDrawing(

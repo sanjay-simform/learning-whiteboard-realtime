@@ -1,5 +1,5 @@
 import apiClient from "../../axios"
-import { AxiosError } from "axios"
+
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 
 import type {
@@ -8,13 +8,17 @@ import type {
   RegisterRequest,
   RegisterResponse,
 } from "./auth.service.dto"
-import { handleApiRequest, type AxiosApiResponse } from "../../util"
+import {
+  handleApiRequest,
+  type ApiResponse,
+  type AxiosApiResponse,
+} from "../../util"
 
 async function registerApi(
   payload: RegisterRequest
 ): Promise<AxiosApiResponse<RegisterResponse>> {
   return await handleApiRequest(
-    apiClient.post<RegisterResponse>("/auth/signup", payload),
+    apiClient.post<ApiResponse<RegisterResponse>>("/auth/signup", payload),
     "Signup failed"
   )
 }
@@ -22,8 +26,9 @@ async function registerApi(
 async function login(
   payload: LoginRequest
 ): Promise<AxiosApiResponse<LoginResponse>> {
+  const a = await apiClient.post<LoginResponse>("/auth/login", payload)
   return await handleApiRequest(
-    apiClient.post<LoginResponse>("/auth/login", payload),
+    apiClient.post<ApiResponse<LoginResponse>>("/auth/login", payload),
     "Login failed"
   )
 }
