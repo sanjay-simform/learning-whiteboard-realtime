@@ -8,11 +8,15 @@ type CursorPayload = {
 
 interface AppContentProps {
   cursors: Record<number, CursorPayload>
+  viewportOffset: {
+    x: number
+    y: number
+  }
 }
 
-export function AppContent({ cursors }: AppContentProps) {
+export function AppContent({ cursors, viewportOffset }: AppContentProps) {
   return (
-    <pixiContainer zIndex={1000}>
+    <pixiContainer x={-viewportOffset.x} y={-viewportOffset.y} zIndex={1000}>
       {Object.values(cursors).map((cursor) => (
         <AnimatedCursor
           key={cursor.userId}

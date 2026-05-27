@@ -27,6 +27,25 @@ type CursorPayload = {
   userId: number
 }
 
+type Point = {
+  x: number
+  y: number
+}
+
+type PanStart = {
+  pointerX: number
+  pointerY: number
+  panX: number
+  panY: number
+}
+
+type TextModalPosition = {
+  screenX: number
+  screenY: number
+  boardX: number
+  boardY: number
+}
+
 export function BoardCanvas({ boardId }: { boardId: number }) {
   const latestPosRef = useRef<CursorPayload>({
     x: 0,
@@ -42,21 +61,62 @@ export function BoardCanvas({ boardId }: { boardId: number }) {
   const appRef = useRef<HTMLDivElement>(null)
   const pixiAppRef = useRef<ApplicationRef | null>(null)
   const lastSendTimeRef = useRef(0)
+  const isPanningRef = useRef(false)
+  const panRef = useRef<Point>({ x: 0, y: 0 })
+  const panStartRef = useRef<PanStart>({
+    pointerX: 0,
+    pointerY: 0,
+    panX: 0,
+    panY: 0,
+  })
 
   const { user } = useAuth()
   const { selectedTool } = useWhiteboardStore()
   const [cursors, setCursors] = useState<Record<number, CursorPayload>>({})
   const [showTextModal, setShowTextModal] = useState(false)
-  const [textModalPos, setTextModalPos] = useState({ x: 0, y: 0 })
+  const [textModalPos, setTextModalPos] = useState<TextModalPosition>({
+    screenX: 0,
+    screenY: 0,
+    boardX: 0,
+    boardY: 0,
+  })
+  const [panOffset, setPanOffset] = useState<Point>({ x: 0, y: 0 })
 
   const { handleMouseDown, handleMouseMove, handleMouseUp } =
     useShapeDrawing(pixiAppRef)
+
+  const applyPanOffset = useCallback((nextPanOffset: Point) => {
+    panRef.current = nextPanOffset
+
+    const stage = pixiAppRef.current?.getApplication()?.stage
+    stage?.position.set(nextPanOffset.x, nextPanOffset.y)
+
+    setPanOffset(nextPanOffset)
+  }, [])
+
+  const getCanvasPoint = useCallback((event: MouseEvent): Point | null => {
+    const rect = appRef.current?.getBoundingClientRect()
+    if (!rect) return null
+
+    return {
+      x: event.clientX - rect.left,
+      y: event.clientY - rect.top,
+    }
+  }, [])
+
+  const getBoardPoint = useCallback((canvasPoint: Point): Point => {
+    return {
+      x: canvasPoint.x - panRef.current.x,
+      y: canvasPoint.y - panRef.current.y,
+    }
+  }, [])
 
   useEffect(() => {
     const stage = pixiAppRef.current?.getApplication()?.stage
     if (!stage) return
 
     stage.sortableChildren = true
+    stage.position.set(panRef.current.x, panRef.current.y)
   }, [])
 
   const getCursorStyle = useCallback((tool: Tool): string => {
@@ -127,51 +187,105 @@ export function BoardCanvas({ boardId }: { boardId: number }) {
   // Cursor tracking and sending
   useEffect(() => {
     if (!appRef.current) return
+
+    const handlePanMove = (event: MouseEvent) => {
+      if (selectedTool !== "hand" || !isPanningRef.current) return
+
+      event.preventDefault()
+
+      const nextPanOffset = {
+        x:
+          panStartRef.current.panX +
+          event.clientX -
+          panStartRef.current.pointerX,
+        y:
+          panStartRef.current.panY +
+          event.clientY -
+          panStartRef.current.pointerY,
+      }
+
+      applyPanOffset(nextPanOffset)
+    }
+
+    const stopPanning = () => {
+      if (!isPanningRef.current) return
+
+      isPanningRef.current = false
+    }
+
     const handleCanvasMouseMove = (event: MouseEvent) => {
-      const rect = appRef.current!.getBoundingClientRect()
-      const x = event.clientX - rect.left
-      const y = event.clientY - rect.top
+      const canvasPoint = getCanvasPoint(event)
+      if (!canvasPoint) return
 
       latestPosRef.current = {
-        x,
-        y,
+        x: canvasPoint.x,
+        y: canvasPoint.y,
         userId: user?.id || 0,
       }
 
-      // Draw shapes on canvas (except for pointer and hand tools)
-      if (
-        selectedTool !== "pointer" &&
-        selectedTool !== "hand" &&
-        selectedTool !== "text"
-      ) {
-        handleMouseMove(selectedTool, x, y)
+      if (selectedTool === "hand") {
+        return
+      }
+
+      // Draw shapes on canvas (except for pointer and text tools)
+      if (selectedTool !== "pointer" && selectedTool !== "text") {
+        const boardPoint = getBoardPoint(canvasPoint)
+        handleMouseMove(selectedTool, boardPoint.x, boardPoint.y)
       }
     }
 
     const handleCanvasMouseDown = (event: MouseEvent) => {
-      const rect = appRef.current!.getBoundingClientRect()
-      const x = event.clientX - rect.left
-      const y = event.clientY - rect.top
+      const canvasPoint = getCanvasPoint(event)
+      if (!canvasPoint) return
+
+      const boardPoint = getBoardPoint(canvasPoint)
+
+      if (selectedTool === "hand") {
+        event.preventDefault()
+
+        isPanningRef.current = true
+        panStartRef.current = {
+          pointerX: event.clientX,
+          pointerY: event.clientY,
+          panX: panRef.current.x,
+          panY: panRef.current.y,
+        }
+
+        return
+      }
 
       if (selectedTool === "text") {
-        setTextModalPos({ x: event.clientX, y: event.clientY })
+        setTextModalPos({
+          screenX: event.clientX,
+          screenY: event.clientY,
+          boardX: boardPoint.x,
+          boardY: boardPoint.y,
+        })
         setShowTextModal(true)
-      } else if (selectedTool !== "pointer" && selectedTool !== "hand") {
-        handleMouseDown(selectedTool, x, y)
+      } else if (selectedTool !== "pointer") {
+        handleMouseDown(selectedTool, boardPoint.x, boardPoint.y)
       }
     }
 
     const handleCanvasMouseUp = (event: MouseEvent) => {
       const rect = appRef.current!.getBoundingClientRect()
-      const x = event.clientX - rect.left
-      const y = event.clientY - rect.top
 
-      if (
-        selectedTool !== "pointer" &&
-        selectedTool !== "hand" &&
-        selectedTool !== "text"
-      ) {
-        const shapeData = handleMouseUp(selectedTool, x, y)
+      if (selectedTool === "hand") {
+        stopPanning()
+        return
+      }
+
+      const canvasPoint = getCanvasPoint(event)
+      if (!canvasPoint) return
+
+      const boardPoint = getBoardPoint(canvasPoint)
+
+      if (selectedTool !== "pointer" && selectedTool !== "text") {
+        const shapeData = handleMouseUp(
+          selectedTool,
+          boardPoint.x,
+          boardPoint.y
+        )
 
         if (shapeData) {
           console.log("Shape data to send:", shapeData)
@@ -198,6 +312,8 @@ export function BoardCanvas({ boardId }: { boardId: number }) {
     appref?.addEventListener("mousemove", handleCanvasMouseMove)
     appref?.addEventListener("mousedown", handleCanvasMouseDown)
     appref?.addEventListener("mouseup", handleCanvasMouseUp)
+    window.addEventListener("mousemove", handlePanMove)
+    window.addEventListener("mouseup", stopPanning)
 
     const tick = () => {
       const latest = latestPosRef.current
@@ -246,6 +362,8 @@ export function BoardCanvas({ boardId }: { boardId: number }) {
       appref?.removeEventListener("mousemove", handleCanvasMouseMove)
       appref?.removeEventListener("mousedown", handleCanvasMouseDown)
       appref?.removeEventListener("mouseup", handleCanvasMouseUp)
+      window.removeEventListener("mousemove", handlePanMove)
+      window.removeEventListener("mouseup", stopPanning)
     }
   }, [
     user?.id,
@@ -254,38 +372,46 @@ export function BoardCanvas({ boardId }: { boardId: number }) {
     handleMouseDown,
     handleMouseMove,
     handleMouseUp,
+    applyPanOffset,
+    getCanvasPoint,
+    getBoardPoint,
   ])
+
+  useEffect(() => {
+    if (selectedTool !== "hand") {
+      isPanningRef.current = false
+    }
+  }, [selectedTool])
 
   return (
     <>
       {showTextModal && (
         <TextInputModal
           showTextModal={showTextModal}
-          x={textModalPos.x}
-          y={textModalPos.y}
+          x={textModalPos.screenX}
+          y={textModalPos.screenY}
           onSubmit={(text) => {
             const rect = appRef.current?.getBoundingClientRect()
             if (rect) {
-              const canvasX = textModalPos.x - rect.left
-              const canvasY = textModalPos.y - rect.top
               const textObj = new PIXI.Text({
                 text,
                 style: {
-                  fontSize: 16,
-                  fill: "#000000",
-                  fontFamily: "Arial",
+                  fontSize: 18,
+                  fill: "#111827",
+                  fontFamily: "Inter Variable, Inter, sans-serif",
+                  fontWeight: "600",
                 },
                 resolution: 2,
-                x: canvasX,
-                y: canvasY,
+                x: textModalPos.boardX,
+                y: textModalPos.boardY,
               })
               const appContainer = pixiAppRef.current?.getApplication()?.stage
               appContainer?.addChild(textObj)
               const normalizedShape = normalizeShapeForBroadcast(
                 {
                   type: "text",
-                  x: canvasX,
-                  y: canvasY,
+                  x: textModalPos.boardX,
+                  y: textModalPos.boardY,
                   text,
                 },
                 rect
@@ -304,16 +430,19 @@ export function BoardCanvas({ boardId }: { boardId: number }) {
       )}
       <div
         ref={appRef}
-        className={`h-full w-full bg-white ${getCursorStyle(selectedTool)}`}
+        className={`board-canvas-grid h-full w-full select-none ${getCursorStyle(selectedTool)}`}
+        style={{
+          backgroundPosition: `${panOffset.x}px ${panOffset.y}px`,
+        }}
       >
         <Application
           className="h-full w-full"
-          // antialias={true}
-          background={0xffffff}
+          antialias={true}
+          backgroundAlpha={0}
           ref={pixiAppRef}
           resizeTo={window}
         >
-          <AppContent cursors={cursors} />
+          <AppContent cursors={cursors} viewportOffset={panOffset} />
         </Application>
       </div>
     </>
