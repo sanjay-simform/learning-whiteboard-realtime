@@ -15,8 +15,11 @@ export const decodeToken = async (
 ): Promise<{ userId: string } | null> => {
   try {
     const secretKey = new TextEncoder().encode(ENV.JWT_SECRET);
-    const { payload } = await jose.jwtVerify(token, secretKey);
-    return { userId: payload.userId as string };
+    const { payload } = await jose.jwtVerify<{ userId: string }>(
+      token,
+      secretKey,
+    );
+    return { userId: payload.userId };
   } catch (error) {
     return null;
   }

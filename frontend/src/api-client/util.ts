@@ -1,5 +1,4 @@
 import type { AxiosError, AxiosResponse } from "axios"
-
 export interface AxiosErrorResponse {
   status: number
   message: string
