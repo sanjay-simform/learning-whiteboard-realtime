@@ -78,6 +78,7 @@ export class UserController {
       res.status(500).json({
         success: false,
         message: "Failed to create user",
+        error: error.message,
       });
     }
   }
