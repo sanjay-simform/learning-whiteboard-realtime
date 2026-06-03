@@ -1,4 +1,4 @@
-import { decodeToken } from "utils/jwt.util";
+import { decodeToken } from "../utils/jwt.util";
 
 import type { IncomingMessage } from "node:http";
 

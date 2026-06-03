@@ -26,7 +26,7 @@ export class UserController {
   async getUserById(req: Request, res: Response): Promise<void> {
     try {
       const { id } = req.params;
-      const user = await this.userService.getUserById(String(id));
+      const user = await this.userService.getUserById(Number(id));
 
       if (!user) {
         res.status(404).json({
@@ -50,9 +50,9 @@ export class UserController {
 
   async createUser(req: Request, res: Response): Promise<void> {
     try {
-      const { name, email, password } = req.body;
+      const { username, password } = req.body;
 
-      if (!name || !email || !password) {
+      if (!username || !password) {
         res.status(400).json({
           success: false,
           message: "Missing required fields: name, email, password",
@@ -60,7 +60,7 @@ export class UserController {
         return;
       }
 
-      const existingUser = await this.userService.getUserByEmail(email);
+      const existingUser = await this.userService.getUserByUsername(username);
       if (existingUser) {
         res.status(409).json({
           success: false,
@@ -69,7 +69,7 @@ export class UserController {
         return;
       }
 
-      const user = await this.userService.createUser({ name, email, password });
+      const user = await this.userService.createUser({ username, password });
       res.status(201).json({
         success: true,
         data: user,
@@ -87,7 +87,7 @@ export class UserController {
       const { id } = req.params;
       const updateData = req.body;
 
-      const user = await this.userService.updateUser(String(id), updateData);
+      const user = await this.userService.updateUser(Number(id), updateData);
 
       if (!user) {
         res.status(404).json({
@@ -112,7 +112,7 @@ export class UserController {
   async deleteUser(req: Request, res: Response): Promise<void> {
     try {
       const { id } = req.params;
-      const deleted = await this.userService.deleteUser(String(id));
+      const deleted = await this.userService.deleteUser(Number(id));
 
       if (!deleted) {
         res.status(404).json({

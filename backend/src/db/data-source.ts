@@ -1,4 +1,4 @@
-import { ENV } from "config/env";
+import { ENV } from "../config/env";
 import { DataSource } from "typeorm";
 
 export const AppDataSource = new DataSource({
@@ -11,7 +11,7 @@ export const AppDataSource = new DataSource({
   // database: ENV.DB_NAME,
   synchronize: true,
   logging: false,
-  entities: ["src/**/*.entity.ts"],
-  migrations: ["src/db/migrations/*.ts"],
-  subscribers: ["src/db/subscribers/*.ts"],
+  entities: ["dist/**/*.entity.js"],
+  migrations: ["dist/db/migrations/*.js"],
+  subscribers: ["dist/db/subscribers/*.js"],
 });

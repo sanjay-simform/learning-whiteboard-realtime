@@ -1,4 +1,4 @@
-import { UserService } from "modules/users";
+import { UserService } from "../users";
 import { Request, Response } from "express";
 
 export class ProfileController {

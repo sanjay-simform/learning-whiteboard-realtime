@@ -1,4 +1,4 @@
-import { ENV } from "config/env";
+import { ENV } from "../config/env";
 import * as jose from "jose";
 
 export const generateToken = async (userId: string): Promise<string> => {

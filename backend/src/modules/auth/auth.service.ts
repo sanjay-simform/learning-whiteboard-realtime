@@ -2,7 +2,7 @@ import bcryptjs from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { UserService } from "../users/user.service";
 import { User } from "../../db/schema/user.entity";
-import { ENV } from "config/env";
+import { ENV } from "../../config/env";
 
 export interface AuthPayload {
   userId: number;

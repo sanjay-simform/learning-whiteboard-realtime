@@ -3,7 +3,7 @@ import type { IncomingMessage, Server } from "node:http";
 import { userWsConnection } from "./user-ws-connection";
 import { getUserFromRequest } from "./auth";
 import { WSEvents } from "./events";
-import { boardSocket } from "modules/board/board-websocket";
+import { boardSocket } from "../modules/board/board-websocket";
 
 const HEARTBEAT_INTERVAL =
   Number(process.env.WS_HEARTBEAT_INTERVAL) || 30 * 1000;

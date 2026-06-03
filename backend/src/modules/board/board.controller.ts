@@ -1,4 +1,4 @@
-import { UserService } from "modules/users";
+import { UserService } from "../users";
 import { boardSocket, BoardSocket } from "./board-websocket";
 import { type Request, type Response } from "express";
 

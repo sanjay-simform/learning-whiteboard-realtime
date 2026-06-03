@@ -1,8 +1,8 @@
 import "reflect-metadata";
 import app from "./app";
-import { createWebSocketServer } from "websocket/app";
-import { AppDataSource } from "db/data-source";
-import { ENV } from "config/env";
+import { createWebSocketServer } from "./websocket/app";
+import { AppDataSource } from "./db/data-source";
+import { ENV } from "./config/env";
 
 const startServer = async () => {
   try {

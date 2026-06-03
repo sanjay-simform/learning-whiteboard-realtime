@@ -1,6 +1,6 @@
-import { RingBufferPool } from "utils/ring-buffer-pool";
-import { getEventCodeForEvent, WSEvents } from "websocket/events";
-import { userWsConnection } from "websocket/user-ws-connection";
+import { RingBufferPool } from "../../utils/ring-buffer-pool";
+import { getEventCodeForEvent, WSEvents } from "../../websocket/events";
+import { userWsConnection } from "../../websocket/user-ws-connection";
 
 export class BoardSocket {
   boards: Map<number, Set<number>> = new Map();
